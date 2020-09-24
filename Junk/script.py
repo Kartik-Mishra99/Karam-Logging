@@ -5,23 +5,15 @@ import sys
 import numpy as np
 import datetime
 import argparse
-from time import gmtime, strftime
-
-'''
-This class is used to get the overall result values from the log file
-'''
 
 class KaramLogger_overall:
     def __init__(self,data):
         self.dataframe = data
-        self.data = pd.read_csv(self.dataframe) # reading the csv log file 
+        self.data = pd.read_csv(self.dataframe)
         self.data = self.data[["email","created_at",'login']]
         self.startdates = []
         self.enddates = []
-
-    '''this function is used for preprocessing purposes. It first reads the date column and converts it into
-    required datetime followed by extraction of hour,minutes and seconds from the date column,
-    also it filters only those rows where login is true and replace blank login entries with logout'''  
+        
     def preprocess(self):
         dates = []
         time = []
@@ -42,7 +34,7 @@ class KaramLogger_overall:
         self.data['login'] = self.data['login'].replace(np.NaN,"Logout")
         self.data = self.data[self.data['login']==True]
         return self.data
-    '''This function is used to get the start and end date for each date value of date column'''
+    
     def get_start_end_dates(self,year,week):
         first_day_year = str(year) + '-' +  '01' + '-' + '01'
         d = parse(first_day_year)
@@ -53,8 +45,7 @@ class KaramLogger_overall:
         dlt = timedelta(days = (int(week)-1)*7)
         self.startdates.append((d + dlt).strftime('%Y-%m-%d'))
         self.enddates.append((d + dlt + timedelta(days=6)).strftime('%Y-%m-%d'))
-
-    '''This function is used to get the total time a person spend on dashboard''' 
+        
     def gettotaltime(self,data):
         time = []
         for i in data['TotalSeconds']:     
@@ -63,24 +54,14 @@ class KaramLogger_overall:
             t = "%d:%02d:%02d" % (hour, mini, sec)
             time.append(t)
         return time 
-
-    '''This function is used for filtering our anomaly values i.e., those rows whose total time in seconds
-    is more than duration of week (604800 seconds) also it is filtering out some email ids that shouldn't
-    be considered in final results'''
+    
     def findAnomaly(self,grouped):
         grouped['Anomaly'] = grouped['TotalSeconds'].map(lambda x: "Anomaly" if x>604800 else "Non-Anomaly")
         Anomaly = grouped[grouped['Anomaly']=='Anomaly']
         ignoremails = ['dashboard@demo.com','sethi.sankalp@karam.in'] # ignore these mails
         Anomaly = Anomaly.loc[~Anomaly.email.isin(ignoremails)]
         return Anomaly
-
-    '''
-    this runner function is using all the other defined functions for finally performing the actual task 
-    of getting the result in desired format we are using group by method of pandas to get the result
-    we are first grouping on startdate and enddate column followed by email to get the desired entries also 
-    we are taking care of anamolies.    
-    '''
-
+    
     def runner(self):
         preprocesseddata = self.preprocess()
         for (a,b) in zip(preprocesseddata['Year'],preprocesseddata['Week']):
@@ -99,9 +80,6 @@ class KaramLogger_overall:
         grouped = grouped[['StartDate','EndDate','email','TimeSpent']]
         return grouped,Anamoly
 
-'''This class is used to get result values of only last week almost all the steps are same
-as performed above ! we are just using a new function by name of "getrecentweekdetails" for retrieving
-the details of logins from last week's monday '''
 
 class KaramLogger_weekly:
     def __init__(self,data):
@@ -149,10 +127,7 @@ class KaramLogger_weekly:
         Anomaly = Anomaly.loc[~Anomaly.email.isin(ignoremails)]
         return Anomaly
         
-    '''
-    This function is used to get the result values from only last week based on current date it aims to
-    get the result values based on last monday
-    '''
+        
     def getrecentweekdetails(self,grouped):
         grouped['Day'] = grouped['Date'].dt.dayofweek
         grouped['DayName'] = grouped['Day'].map({0:"Monday",1:"Tuesday",2:"Wednesday",3:"Thursday",4:"Friday",5:"Saturday",6:"Sunday"})
@@ -185,32 +160,25 @@ class KaramLogger_weekly:
         pastweekdata = pastweekdata[::-1]
         return pastweekdata,Anamoly
         
-'''
-This Runner class is built to bring the code into action based on the user input (weekly or overall)
-it runs the above classes and generates the result into excel file format
-'''
 class Runner:
     def __init__(self,Type,data):
-        
-        self.now = str(strftime("%Y-%m-%d_%H:%M:%S", gmtime()))
-        # self.now = str(datetime.date.today().strftime('%Y-%m-%d %H:%M:%S'))
         if Type == "overall":
             karam = KaramLogger_overall(data)
             grouped,Anamoly = karam.runner()
-            grouped.to_excel("./Result/Success/overall_result_{}.xlsx".format(self.now).replace(':', '.'),index=None)
-            Anamoly.to_excel("./Result/Anamoly/overall_anamoly_{}.xlsx".format(self.now).replace(':', '.'),index=None)
+            grouped.to_excel("overall_result.xlsx",index=None)
+            Anamoly.to_excel("overall_anamoly.xlsx",index=None)
         
         elif Type == "weekly":
             karam = KaramLogger_weekly(data)
             weekly,Anamoly = karam.runner()
-            weekly.to_excel("./Result/Success/weekly_result_{}.xlsx".format(self.now).replace(':', '.'),index=None)
-            Anamoly.to_excel("./Result/Anamoly/weekly_anamoly_{}.xlsx".format(self.now).replace(':', '.'),index=None)
+            weekly.to_excel("weekly_result.xlsx",index=None)
+            Anamoly.to_excel("weekly_anamoly.xlsx",index=None)
 
 
 if __name__=="__main__":
     parser = argparse.ArgumentParser()
-    parser.add_argument("--Type",help="choose weekly or overall",type=str,default='weekly')
-    parser.add_argument("--data",help="enter csv file name",type=str,default='./data/logs.csv')
+    parser.add_argument("Type",help="choose yearly/monthly/yearly",type=str)
+    parser.add_argument("data",help="enter csv file name",type=str)
     args = parser.parse_args()
     Type = args.Type
     data = args.data
