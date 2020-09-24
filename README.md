@@ -19,6 +19,7 @@ Numpy
 Rest it doesn’t have any other specific system requirement.
 
 **USAGE -** 
+
 Inputs - type of result you want (Users can choose either weekly or overall) and input csv file path.
 
 You can run the code using the command for getting results from last week - 
@@ -29,4 +30,6 @@ or You can run the code using the command for getting results overall duration -
 
 `python finalscript.py overall csvfilename.csv`
 
-**Result format -** two excel files will be created as output one consisting of normal results and another file consisting of anomalies. A result folder will be created in which 2 subfolders will be present Success and Anomaly consisting of respective result files.
+**Result format -** 
+
+two excel files will be created as output one consisting of normal results and another file consisting of anomalies. A result folder will be created in which 2 subfolders will be present Success and Anomaly consisting of respective result files.
