@@ -16,6 +16,7 @@ The code can be run on windows/Linux/Unix operating systems given the fact you h
 Python 3.7
 Pandas 
 Numpy
+openpyxl
 Rest it doesn’t have any other specific system requirement.
 
 **USAGE -** 
@@ -24,11 +25,11 @@ Inputs - type of result you want (Users can choose either weekly or overall) and
 
 You can run the code using the command for getting results from last week - 
 
-`python finalscript.py weekly csvfilename.csv` 
+`python finalscript.py --Type weekly --data logs.csv` 
 
 or You can run the code using the command for getting results overall duration - 
 
-`python finalscript.py overall csvfilename.csv`
+`python finalscript.py --Type overall --data logs.csv`
 
 **Result format -** 
 
